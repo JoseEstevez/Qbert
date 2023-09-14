@@ -5,11 +5,15 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import wrappers, logger
 
+import time
+
+
 class Agent(object):
     """The world's simplest agent!"""
+    beforeColor = np.array([45, 87, 176])
+
     def __init__(self, action_space):
         self.action_space = action_space
-
 
     # You should modify this function
     def act(self, observation, reward, done):
@@ -19,14 +23,18 @@ class Agent(object):
         vertInc = 30
         horizInc = 14
 
-        beforeColor = np.array([45, 87, 176])
+        if reward == 3100:
+            time.sleep(5)
+            beforeColor = observation[36][77]
+            self.beforeColor = beforeColor
+        else:
+            beforeColor = self.beforeColor
 
         # get the location of the qbert
-        if np.where(observation == [181, 83, 40])[0].size == 0:
+        if np.where(observation == qbertColor)[0].size == 0:
             return self.action_space.sample()
 
         # 'top left' of qbert
-
 
         # 'bottom right' of qbert
         qbertcoord2 = [np.where(observation == qbertColor)[0][-1], np.where(observation == qbertColor)[1][-1]]
@@ -37,7 +45,8 @@ class Agent(object):
         brighty = qbertcoord2[1] - horizInc
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
         try:
-            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
+            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not (
+            (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
                 return 5
         except IndexError:
             pass
@@ -48,7 +57,8 @@ class Agent(object):
         brighty = qbertcoord2[1] + horizInc
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
         try:
-            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
+            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not (
+            (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
                 return 3
         except IndexError:
             pass
@@ -58,7 +68,8 @@ class Agent(object):
         brighty = qbertcoord2[1] - horizInc
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
         try:
-            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
+            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not (
+            (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
                 return 4
         except IndexError:
             pass
@@ -68,12 +79,11 @@ class Agent(object):
         brighty = qbertcoord2[1] + horizInc
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
         try:
-            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
+            if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == beforeColor).any() and not (
+            (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == coilyColor).any()):
                 return 2
         except IndexError:
             pass
-
-
 
         return self.action_space.sample()
 
@@ -83,6 +93,7 @@ def makeLookBox(coord):
     botRight = [coord[0] + 10, coord[1] + 10]
 
     return topLeft, botRight
+
 
 ## YOU MAY NOT MODIFY ANYTHING BELOW THIS LINE OR USE
 ## ANOTHER MAIN PROGRAM
@@ -103,7 +114,6 @@ if __name__ == '__main__':
     # like: tempfile.mkdtemp().
     outdir = 'random-agent-results'
 
-
     env.unwrapped.seed(0)
     agent = Agent(env.action_space)
 
@@ -114,16 +124,14 @@ if __name__ == '__main__':
     special_data = {}
     special_data['ale.lives'] = 3
     observation = env.reset()[0]
-    
 
     while not terminated:
-        
         action = agent.act(observation, reward, terminated)
-        #pdb.set_trace()
+        # pdb.set_trace()
         observation, reward, terminated, truncated, info = env.step(action)
         score += reward
         env.render()
-     
+
     # Close the env and write monitor result info to disk
-    print ("Your score: %d" % score)
+    print("Your score: %d" % score)
     env.close()
