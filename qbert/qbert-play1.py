@@ -23,7 +23,8 @@ class Agent(object):
     def act(self, observation, reward, done):
         vertInc = 30
         horizInc = 14
-        self.actions = [5, 4, 3, 2]
+        self.defaultActions = [5, 4, 3, 2]
+        self.preferredActions = []
 
         if reward == 3100:
             time.sleep(5)
@@ -63,17 +64,17 @@ class Agent(object):
         brighty = qbertcoord2[1] + horizInc
         self.chooseMovement(brightx, brighty, 2)
 
-        if (self.preferredActions.__sizeof__() != 0) :
+        if (len(self.preferredActions) != 0) :
             return np.random.choice(self.preferredActions)
         else :
-            return np.random.choice(self.actions)
+            return np.random.choice(self.defaultActions)
 
     def chooseMovement(self, brightx, brighty, action):
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
         try:
             if ((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.coilyColor).any() or
                     (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == np.array([0, 0, 0])).all()):
-                self.actions.remove(action)
+                self.defaultActions.remove(action)
             elif (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.beforeColor).any():
                 self.preferredActions.append(action)
         except IndexError:
