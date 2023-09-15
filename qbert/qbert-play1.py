@@ -42,6 +42,24 @@ class Agent(object):
         # 'bottom right' of qbert
         qbertcoord2 = [np.where(observation == self.qbertColor)[0][-1], np.where(observation == self.qbertColor)[1][-1]]
 
+        # Check if Coily is at any 2 block distance from Qbert
+
+        upx = qbertcoord2[0] - 2 * vertInc
+        upy = qbertcoord2[1]
+
+        downx = qbertcoord2[0] + 2 * vertInc
+        downy = qbertcoord2[1]
+
+        leftx = qbertcoord2[0]
+        lefty = qbertcoord2[1] - 2 * horizInc
+
+        rightx = qbertcoord2[0]
+        righty = qbertcoord2[1] + 2 * horizInc
+
+        if (self.checkCoilyNear(upx, upy) or self.checkCoilyNear(downx, downy) or
+                self.checkCoilyNear(leftx, lefty) or self.checkCoilyNear(rightx, righty)):
+            return 0
+
         # look down and left for unflipped block
 
         brightx = qbertcoord2[0] + vertInc
@@ -64,21 +82,43 @@ class Agent(object):
         brighty = qbertcoord2[1] + horizInc
         self.chooseMovement(brightx, brighty, 2)
 
-        if (len(self.preferredActions) != 0) :
+        if (len(self.preferredActions) != 0):
             return np.random.choice(self.preferredActions)
-        else :
+        elif (len(self.defaultActions) != 0):
             return np.random.choice(self.defaultActions)
+        return 0
 
     def chooseMovement(self, brightx, brighty, action):
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
+
+        # we need to check the color of qberts current condition, then look to the look box and see if there's some color
+        # there that isn't in qberts current box, do it after the first if because it's more important to check that coily
+        # isn't there first, somehow put it in the elif.
+
         try:
             if ((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.coilyColor).any() or
-                    (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == np.array([0, 0, 0])).all()):
+                    self.isEmpty(observation, topleft, botright)):
                 self.defaultActions.remove(action)
             elif (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.beforeColor).any():
                 self.preferredActions.append(action)
         except IndexError:
             pass
+
+    def isEmpty(self, observation, topleft, botright):
+        grayscale = np.mean(observation, axis=2)
+
+        colors = np.unique(grayscale[topleft[0]:botright[0], topleft[1]:botright[1]])
+
+        if (colors.size > 2):
+            return False
+
+        return True
+
+    def checkCoilyNear(self, x, y, ):
+        topleft, botright = makeLookBox(np.array([x, y]))
+        if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.coilyColor).any():
+            return True
+        return False
 
 
 def makeLookBox(coord):
@@ -86,6 +126,7 @@ def makeLookBox(coord):
     botRight = [coord[0] + 10, coord[1] + 10]
 
     return topLeft, botRight
+
 
 ## YOU MAY NOT MODIFY ANYTHING BELOW THIS LINE OR USE
 ## ANOTHER MAIN PROGRAM
