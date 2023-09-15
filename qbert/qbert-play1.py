@@ -13,7 +13,8 @@ class Agent(object):
     beforeColor = np.array([45, 87, 176])
     qbertColor = np.array([181, 83, 40])
     coilyColor = np.array([146, 70, 192])
-    actions = []
+    defaultActions = []
+    preferredActions = []
 
     def __init__(self, action_space):
         self.action_space = action_space
@@ -62,7 +63,10 @@ class Agent(object):
         brighty = qbertcoord2[1] + horizInc
         self.chooseMovement(brightx, brighty, 2)
 
-        return self.action_space.sample()
+        if (self.preferredActions.__sizeof__() != 0) :
+            return np.random.choice(self.preferredActions)
+        else :
+            return np.random.choice(self.actions)
 
     def chooseMovement(self, brightx, brighty, action):
         topleft, botright = makeLookBox(np.array([brightx, brighty]))
@@ -71,9 +75,7 @@ class Agent(object):
                     (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == np.array([0, 0, 0])).all()):
                 self.actions.remove(action)
             elif (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.beforeColor).any():
-                return action
-            else :
-                return np.random.choice(self.actions)
+                self.preferredActions.append(action)
         except IndexError:
             pass
 
