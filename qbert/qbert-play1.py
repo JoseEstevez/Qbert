@@ -15,6 +15,8 @@ class Agent(object):
     coilyColor = np.array([146, 70, 192])
     defaultActions = []
     preferredActions = []
+    lastReward = 0.0
+    lvlchange = 0
 
     def __init__(self, action_space):
         self.action_space = action_space
@@ -26,13 +28,17 @@ class Agent(object):
         self.defaultActions = [5, 4, 3, 2]
         self.preferredActions = []
 
-        if reward == 3100:
-            time.sleep(5)
-            beforeColor = observation[36][77]
-            self.beforeColor = beforeColor
-        else:
-            beforeColor = self.beforeColor
+        if reward == 100:
+            # beforeColor = observation[92][77]
+            # self.beforeColor = observation[92][77]
+            # self.lastReward = reward
+            self.lvlchange = 2
+            return 0
+        elif self.lvlchange > 0:
+            self.beforeColor = observation[92][77]
+            self.lvlchange -= 1
 
+        # self.lastReward = reward
         # get the location of the qbert
         if np.where(observation == self.qbertColor)[0].size == 0:
             return self.action_space.sample()
@@ -40,21 +46,21 @@ class Agent(object):
         # 'top left' of qbert
 
         # 'bottom right' of qbert
-        qbertcoord2 = [np.where(observation == self.qbertColor)[0][-1], np.where(observation == self.qbertColor)[1][-1]]
+        qbertcoord = [np.where(observation == self.qbertColor)[0][-1], np.where(observation == self.qbertColor)[1][-1]]
 
         # Check if Coily is at any 2 block distance from Qbert
 
-        upx = qbertcoord2[0] - 2 * vertInc
-        upy = qbertcoord2[1]
+        upx = qbertcoord[0] - 2 * vertInc
+        upy = qbertcoord[1]
 
-        downx = qbertcoord2[0] + 2 * vertInc
-        downy = qbertcoord2[1]
+        downx = qbertcoord[0] + 2 * vertInc
+        downy = qbertcoord[1]
 
-        leftx = qbertcoord2[0]
-        lefty = qbertcoord2[1] - 2 * horizInc
+        leftx = qbertcoord[0]
+        lefty = qbertcoord[1] - 2 * horizInc
 
-        rightx = qbertcoord2[0]
-        righty = qbertcoord2[1] + 2 * horizInc
+        rightx = qbertcoord[0]
+        righty = qbertcoord[1] + 2 * horizInc
 
         if (self.checkCoilyNear(upx, upy) or self.checkCoilyNear(downx, downy) or
                 self.checkCoilyNear(leftx, lefty) or self.checkCoilyNear(rightx, righty)):
@@ -62,25 +68,41 @@ class Agent(object):
 
         # look down and left for unflipped block
 
-        brightx = qbertcoord2[0] + vertInc
-        brighty = qbertcoord2[1] - horizInc
-        self.chooseMovement(brightx, brighty, 5)
+        # nearx = qbertcoord[0] + vertInc
+        # neary = qbertcoord[1] - horizInc
+        # farx = qbertcoord[0] + 2 * vertInc
+        # fary = qbertcoord[1] - 2 * horizInc
+        near = np.array([qbertcoord[0] + vertInc, qbertcoord[1] - horizInc])
+        far = np.array([qbertcoord[0] + 2 * vertInc, qbertcoord[1] - 2 * horizInc])
+        self.chooseMovement(near, far, 5)
 
         # look down and right for unflipped block
 
-        brightx = qbertcoord2[0] + vertInc
-        brighty = qbertcoord2[1] + horizInc
-        self.chooseMovement(brightx, brighty, 3)
+        # nearx = qbertcoord[0] + vertInc
+        # neary = qbertcoord[1] + horizInc
+        # farx = qbertcoord[0] + 2 * vertInc
+        # fary = qbertcoord[1] + 2 * horizInc
+        near = np.array([qbertcoord[0] + vertInc, qbertcoord[1] + horizInc])
+        far = np.array([qbertcoord[0] + 2 * vertInc, qbertcoord[1] + 2 * horizInc])
+        self.chooseMovement(near, far, 3)
         # look up and left for unflipped block
 
-        brightx = qbertcoord2[0] - vertInc
-        brighty = qbertcoord2[1] - horizInc
-        self.chooseMovement(brightx, brighty, 4)
+        # nearx = qbertcoord[0] - vertInc
+        # neary = qbertcoord[1] - horizInc
+        # farx = qbertcoord[0] - 2 * vertInc
+        # fary = qbertcoord[1] - 2 * horizInc
+        near = np.array([qbertcoord[0] - vertInc, qbertcoord[1] - horizInc])
+        far = np.array([qbertcoord[0] - 2 * vertInc, qbertcoord[1] - 2 * horizInc])
+        self.chooseMovement(near, far, 4)
 
         # look up and right for unflipped block
-        brightx = qbertcoord2[0] - vertInc
-        brighty = qbertcoord2[1] + horizInc
-        self.chooseMovement(brightx, brighty, 2)
+        # nearx = qbertcoord[0] - vertInc
+        # neary = qbertcoord[1] + horizInc
+        # farx = qbertcoord[0] - 2 * vertInc
+        # fary = qbertcoord[1] + 2 * horizInc
+        near = np.array([qbertcoord[0] - vertInc, qbertcoord[1] + horizInc])
+        far = np.array([qbertcoord[0] - 2 * vertInc, qbertcoord[1] + 2 * horizInc])
+        self.chooseMovement(near, far, 2)
 
         if (len(self.preferredActions) != 0):
             return np.random.choice(self.preferredActions)
@@ -88,18 +110,23 @@ class Agent(object):
             return np.random.choice(self.defaultActions)
         return 0
 
-    def chooseMovement(self, brightx, brighty, action):
-        topleft, botright = makeLookBox(np.array([brightx, brighty]))
+    def chooseMovement(self, near, far, action):
+        tlnear, brnear = makeLookBox(near)
+        tlfar, brfar = makeLookBox(far)
 
         # we need to check the color of qberts current condition, then look to the look box and see if there's some color
         # there that isn't in qberts current box, do it after the first if because it's more important to check that coily
         # isn't there first, somehow put it in the elif.
+        # box = observation[tlnear[0]:brnear[0], tlnear[1]:brnear[1]]
+        # box.reshape((brnear[0] - tlnear[0]) * (brnear[1] - tlnear[1]), 3)
+        # colors = tuple
 
         try:
-            if ((observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.coilyColor).any() or
-                    self.isEmpty(observation, topleft, botright)):
+            if ((observation[tlnear[0]:brnear[0], tlnear[1]:brnear[1]] == self.coilyColor).any() or
+                    self.isEmpty(observation, tlnear, brnear) or
+                    (observation[tlfar[0]:brfar[0], tlfar[1]:brfar[1]] == self.coilyColor).any()):
                 self.defaultActions.remove(action)
-            elif (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.beforeColor).any():
+            elif (observation[tlnear[0]:brnear[0], tlnear[1]:brnear[1]] == self.beforeColor).any():
                 self.preferredActions.append(action)
         except IndexError:
             pass
@@ -114,8 +141,10 @@ class Agent(object):
 
         return True
 
-    def checkCoilyNear(self, x, y, ):
+    def checkCoilyNear(self, x, y):
         topleft, botright = makeLookBox(np.array([x, y]))
+        if x < 0 or y < 0:
+            return False
         if (observation[topleft[0]:botright[0], topleft[1]:botright[1]] == self.coilyColor).any():
             return True
         return False
