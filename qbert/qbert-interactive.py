@@ -4,8 +4,6 @@ import pdb
 import gymnasium as gym
 import time
 from gymnasium import wrappers, logger
-import keyboard
-
 
 """
 Action space
@@ -34,11 +32,12 @@ def on_press(key):
             action = 3
         else:
             action = int(key.char)
-        #print(last_key_pressed)
+        # print(last_key_pressed)
     except AttributeError:
         pass
     except ValueError:
         pass
+
 
 def on_release(key):
     global action
@@ -54,6 +53,7 @@ listener.start()
 
 class Agent(object):
     """The world's simplesst agent!"""
+
     def __init__(self, action_space):
         self.action_space = action_space
 
@@ -61,6 +61,7 @@ class Agent(object):
     def act(self, observation, reward, done):
         global action
         return action
+
 
 ## YOU MAY NOT MODIFY ANYTHING BELOW THIS LINE OR USE
 ## ANOTHER MAIN PROGRAM
@@ -81,7 +82,6 @@ if __name__ == '__main__':
     # like: tempfile.mkdtemp().
     outdir = 'random-agent-results'
 
-
     env.unwrapped.seed(0)
     agent = Agent(env.action_space)
 
@@ -95,18 +95,16 @@ if __name__ == '__main__':
 
     terminated = False
     while not terminated:
-        
         action = agent.act(observation, reward, done)
         time.sleep(.05)
 
-        #pdb.set_trace()
+        # pdb.set_trace()
         observation, reward, terminated, truncated, info = env.step(action)
 
         score += reward
 
         env.render()
 
-     
     # Close the env and write monitor result info to disk
-    print ("Your score: %d" % score)
+    print("Your score: %d" % score)
     env.close()
