@@ -8,6 +8,9 @@ if __name__ == '__main__':
 
     runs = data.to_numpy().flatten()
     runs = np.sort(runs)
+    avg = np.mean(runs)
+    median = np.median(runs)
+    std_error = np.std(runs) / np.sqrt(len(runs))
 
     # Plotting a histogram
 
@@ -23,5 +26,8 @@ if __name__ == '__main__':
     ax.set_title('Qbert Scores')
     ax.axis([1000, 30000, 0, 12])
     ax.grid(True)
-    print(runs)
+
+    print(avg)
+    print(median)
+    print(std_error)
     plt.show()

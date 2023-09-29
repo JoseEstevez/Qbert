@@ -101,6 +101,8 @@ if __name__ == '__main__':
         # pdb.set_trace()
         observation, reward, terminated, truncated, info = env.step(action)
 
+        if reward > 25:
+            print(reward)
         score += reward
 
         env.render()
